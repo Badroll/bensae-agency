@@ -84,7 +84,9 @@
 												<label class="mb-0 theme-control-toggle-label theme-control-toggle-dark" for="themeControlToggle" data-bs-toggle="tooltip" data-bs-placement="left" title="Switch theme"><span class="icon" data-feather="sun"></span></label>
 											</div>
 										</li>
+										@if(isset($USER))
 										<li class="nav-item"><a class="nav-link px-2 icon-indicator icon-indicator-primary" href="#" role="button"><span class="text-700" data-feather="bell" style="height:20px;width:20px;"></span><span class="icon-indicator-number">0</span></a></li>
+										
 										<!-- <li class="nav-item dropdown">
 											<a class="nav-link px-2 icon-indicator icon-indicator-sm icon-indicator-danger" id="navbarTopDropdownNotification" href="#" role="button" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-haspopup="true" aria-expanded="false"><span class="text-700" data-feather="bell" style="height:20px;width:20px;"></span></a>
 											<div class="dropdown-menu dropdown-menu-end notification-dropdown-menu py-0 shadow border border-300 navbar-dropdown-caret mt-2" id="navbarDropdownNotfication" aria-labelledby="navbarDropdownNotfication">
@@ -212,6 +214,7 @@
 												</div>
 											</div>
 										</li> -->
+										
 										<li class="nav-item dropdown">
 											<a class="nav-link px-2" id="navbarDropdownUser" href="#" role="button" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-haspopup="true" aria-expanded="false"><span class="text-700" data-feather="user" style="height:20px;width:20px;"></span></a>
 											<div class="dropdown-menu dropdown-menu-end navbar-dropdown-caret py-0 dropdown-profile shadow border border-300 mt-2" aria-labelledby="navbarDropdownUser">
@@ -222,9 +225,7 @@
 																<img class="rounded-circle " src="../../../assets/img/team/72x72/57.webp" alt="" />
 															</div>
 															<h6 class="mt-2 text-black">
-																@if(isset($USER))
 																{{ $USER->{"USER_NAMA"} }}
-																@endif
 															</h6>
 														</div>
 														<!-- <div class="mb-3 mx-3">
@@ -252,6 +253,7 @@
 												</div>
 											</div>
 										</li>
+										@endif
 									</ul>
 								</div>
 								<!-- <div class="col-12 col-md-6">
@@ -365,13 +367,13 @@
 							<li class="nav-item" data-nav-item="data-nav-item"><a class="nav-link" href="{{ url('/') }}/master/sponsor">Sponsor</a></li>
 							<li class="nav-item" data-nav-item="data-nav-item"><a class="nav-link" href="{{ url('/') }}/keuangan">Accounting</a></li>
 						@endif
-						@endif
 						<li class="nav-item" data-nav-item="data-nav-item"><a class="nav-link pe-0 active" href="{{ url('/') }}/permohonan">Permohonan</a></li>
 						<li class="nav-item dropdown" data-nav-item="data-nav-item" data-more-item="data-more-item">
 							<a class="nav-link dropdown-toggle dropdown-caret-none fw-bold pe-0" href="javascript: void(0)" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false" data-boundary="window" data-bs-reference="parent">
 							More<span class="fas fa-angle-down ms-2"></span></a>
 							<div class="dropdown-menu dropdown-menu-end category-list" aria-labelledby="navbarDropdown" data-category-list="data-category-list"></div>
 						</li>
+						@endif
 					</ul>
 				</div>
 			</nav>
