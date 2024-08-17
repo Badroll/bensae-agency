@@ -1,5 +1,117 @@
 <?php
 
+function addToActivityLog($logData) {
+    $alId = DB::table("_activity_log")->insertGetId(array(
+        "AL_DATE" => date("Y-m-d H:i:s"),
+        "AL_SUBJECT_U_ID" => $logData["SUBJECT"],
+        "AL_INFO" => $logData["INFO"],
+        "AL_SESSION" => (isset($logData["AL_SESSION"]) ? $logData["AL_SESSION"] : "-"),
+        "AL_CONTEXT" => $logData["CONTEXT"]
+    ));
+}
+
+function recreateUserToken($id){
+    $newToken = "UT-".md5(date("Y-m-d H:i:s").env("CUSTOM_KEY_SESSION"));
+    DB::table("_user")
+        ->where("USER_ID", $id)
+        ->update(array(
+            "USER_LOGIN_TGL" => date("Y-m-d H:i:s"),
+            "USER_TOKEN" => $newToken,
+            //"USER_TOKEN_EXPIRED" => date('Y-m-d H:i:s', strtotime('+1 hour'))
+        ));
+    Session::put('SESSION_USER_TOKEN', $newToken);
+}
+
+
+function cURLPost($url, $params, $header = false) {
+    $postData = '';
+    //create name value pairs separated by &
+    foreach($params as $k => $v) {
+        $postData .= $k . '='.$v.'&';
+    }
+    rtrim($postData, '&');
+
+    $ch = curl_init();
+
+    curl_setopt($ch,CURLOPT_URL,$url);
+    curl_setopt($ch,CURLOPT_RETURNTRANSFER,true);
+    curl_setopt($ch,CURLOPT_HEADER, $header);
+    curl_setopt($ch, CURLOPT_POST, count($params));
+    curl_setopt($ch, CURLOPT_POSTFIELDS, $postData);
+
+    $output = curl_exec($ch);
+
+    curl_close($ch);
+    return $output;
+}
+
+
+function cURLGet($url, $data, $header){
+    // Menambahkan parameter ke URL
+    if(!str_contains($url, "?")){
+        $url .= '?';
+    }
+    $url .= http_build_query($data);
+
+    // Inisialisasi cURL
+    $ch = curl_init($url);
+
+    // Mengatur opsi cURL
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true); // Mengatur agar cURL mengembalikan respons sebagai string
+    curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true); // Mengikuti pengalihan (jika ada)
+    // Tambahan opsional: Mengatur header HTTP jika Anda memerlukannya
+    curl_setopt($ch, CURLOPT_HTTPHEADER, $header);
+
+    // Menjalankan permintaan cURL dan menyimpan responsnya dalam variabel
+    $response = curl_exec($ch);
+
+    // Menutup koneksi cURL
+    curl_close($ch);
+    return $response;
+}
+
+
+//Crypto
+    function cryptoJsAesDecrypt($passphrase, $jsonString){
+        $jsondata = json_decode($jsonString, true);
+        try {
+            $salt = hex2bin($jsondata["s"]);
+            $iv  = hex2bin($jsondata["iv"]);
+        } 
+        catch(Exception $e) { 
+            return null; 
+        }
+
+        $ct = base64_decode($jsondata["ct"]);
+        $concatedPassphrase = $passphrase.$salt;
+        $md5 = array();
+        $md5[0] = md5($concatedPassphrase, true);
+        $result = $md5[0];
+        for ($i = 1; $i < 3; $i++) {
+            $md5[$i] = md5($md5[$i - 1].$concatedPassphrase, true);
+            $result .= $md5[$i];
+        }
+        $key = substr($result, 0, 32);
+        $data = openssl_decrypt($ct, 'aes-256-cbc', $key, true, $iv);
+        return json_decode($data, true);
+    }
+
+    function cryptoJsAesEncrypt($passphrase, $value){
+        $salt = openssl_random_pseudo_bytes(8);
+        $salted = '';
+        $dx = '';
+        while (strlen($salted) < 48) {
+            $dx = md5($dx.$passphrase.$salt, true);
+            $salted .= $dx;
+        }
+        $key = substr($salted, 0, 32);
+        $iv  = substr($salted, 32,16);
+        $encrypted_data = openssl_encrypt(json_encode($value), 'aes-256-cbc', $key, true, $iv);
+        $data = array("ct" => base64_encode($encrypted_data), "iv" => bin2hex($iv), "s" => bin2hex($salt));
+        return json_encode($data);
+    }
+//-------
+
 function tglIndo($tgl, $mode = "SHORT") {
     if($tgl != "" && $mode != "" && $tgl!= "0000-00-00" && $tgl != "0000-00-00 00:00:00") {
         $t = explode("-",$tgl);

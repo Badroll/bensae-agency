@@ -242,8 +242,9 @@ class ApiController extends Controller
             JOIN m_wilayah as E ON A.PEMH_WILAYAH = E.WILAYAH_ID
             JOIN m_status as F ON A.PEMH_STATUS = F.STATUS_ID
             WHERE A.PEMH_ID = ?
+            OR MD5(A.PEMH_ID) = ?
         ";
-        $permohonan = DB::select($qry, [$id]);
+        $permohonan = DB::select($qry, [$id, $id]);
         if(count($permohonan) == 0){
             return reply("ERROR", "Terjadi kesalahan, data permohonan tidak ditemukan");
         }
@@ -256,11 +257,14 @@ class ApiController extends Controller
         if(!$req->has("id")) return reply("ERROR", "Parameter incomplete");
         $id = $req->{"id"};
 
-        $permohonan = DB::table("permohonan")->find($id);
-        if(!$permohonan){
+        $permohonan = DB::table("permohonan")->where(function ($query) use ($id) {
+            $query->where('PEMH_ID', $id)
+                ->orWhere(DB::raw('MD5(PEMH_ID)'), $id);
+        });
+        if(!$permohonan->first()){
             return reply("ERROR", "Terjadi kesalahan, data permohonan tidak ditemukan");
         }
-        $permohonans->delete();
+        $permohonan->delete();
 
         return reply("SUCCESS", "Permohonan dihapus");
     }
@@ -350,8 +354,11 @@ class ApiController extends Controller
         if(!$req->has("status")) return reply("ERROR", "Parameters incomplete (status)");
         $status = $req->{"status"};
 
-        $baseData = DB::table("permohonan")->find($id);
-        if(!$baseData){
+        $baseData = DB::table("permohonan")->where(function ($query) use ($id) {
+            $query->where('PEMH_ID', $id)
+                ->orWhere(DB::raw('MD5(PEMH_ID)'), $id);
+        });
+        if(!$baseData->first()){
             return reply("ERROR", "Terjadi kesalahan, data permohonan tidak ditemukan");
         }
 
@@ -399,7 +406,7 @@ class ApiController extends Controller
         ];
         $baseData->update($params);
 
-        return reply("SUCCESS", "Permohonan diperbarui", $permohonan);
+        return reply("SUCCESS", "Permohonan diperbarui");
     }
 
 
